@@ -64,6 +64,8 @@ class PenguinGame extends HTMLElement {
         this.jumpForce = -10;
         
         this.keys = {};
+        this.moveLeft = false;
+        this.moveRight = false;
 
         this.scoreElement = this.shadowRoot.querySelector('.score');
         this.gameOverElement = this.shadowRoot.querySelector('.game-over');
@@ -73,6 +75,9 @@ class PenguinGame extends HTMLElement {
         this.init();
         document.addEventListener('keydown', (e) => this.keys[e.code] = true);
         document.addEventListener('keyup', (e) => this.keys[e.code] = false);
+        this.shadowRoot.addEventListener('touchstart', (e) => this.handleTouch(e));
+        this.shadowRoot.addEventListener('touchend', (e) => this.handleTouchEnd(e));
+        this.shadowRoot.addEventListener('touchmove', (e) => this.handleTouch(e));
     }
 
     init() {
@@ -129,12 +134,32 @@ class PenguinGame extends HTMLElement {
 
         requestAnimationFrame(() => this.gameLoop());
     }
+
+    handleTouch(e) {
+        e.preventDefault();
+        const touchX = e.touches[0].clientX;
+        const gameRect = this.getBoundingClientRect();
+        const midPoint = gameRect.left + gameRect.width / 2;
+        if (touchX < midPoint) {
+            this.moveLeft = true;
+            this.moveRight = false;
+        } else {
+            this.moveLeft = false;
+            this.moveRight = true;
+        }
+    }
+
+    handleTouchEnd(e) {
+        e.preventDefault();
+        this.moveLeft = false;
+        this.moveRight = false;
+    }
     
     handleInput() {
-        if (this.keys['ArrowLeft'] || this.keys['KeyA']) {
+        if (this.keys['ArrowLeft'] || this.keys['KeyA'] || this.moveLeft) {
             this.penguinX -= 5;
         }
-        if (this.keys['ArrowRight'] || this.keys['KeyD']) {
+        if (this.keys['ArrowRight'] || this.keys['KeyD'] || this.moveRight) {
             this.penguinX += 5;
         }
         // wraparound
