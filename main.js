@@ -3,6 +3,31 @@ class PenguinGame extends HTMLElement {
         super();
         this.attachShadow({ mode: 'open' });
 
+        this.stages = [
+            { // Stage 0
+                scoreThreshold: 0,
+                platformWidth: 80,
+                gravity: 0.3,
+                bgColor: 'linear-gradient(to bottom, #87CEEB, #FFFFFF)',
+                penguinImage: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g><rect x="30" y="40" width="40" height="50" rx="20" fill="%23333"/><path d="M50 10 C 25 10 25 40 50 40 C 75 40 75 10 50 10 Z" fill="%23333"/><path d="M50 30 C 40 30 40 40 50 40 C 60 40 60 30 50 30 Z" fill="white"/><ellipse cx="40" cy="35" rx="3" ry="5" fill="black"/><ellipse cx="60" cy="35" rx="3" ry="5" fill="black"/><path d="M50 50 C 40 60 40 70 50 70 C 60 70 60 60 50 50 Z" fill="white"/><path d="M20 60 L 30 50 L 10 40 Z" fill="%23333" transform="rotate(-20 20 50)"/><path d="M80 60 L 70 50 L 90 40 Z" fill="%23333" transform="rotate(20 80 50)"/><path d="M40 90 Q 50 95 60 90 L 55 95 L 45 95 Z" fill="orange"/></g></svg>`
+            },
+            { // Stage 1
+                scoreThreshold: 500,
+                platformWidth: 60,
+                gravity: 0.35,
+                bgColor: 'linear-gradient(to bottom, #4682B4, #E0FFFF)',
+                penguinImage: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g><rect x="30" y="30" width="40" height="60" rx="20" fill="%23333"/><path d="M50 5 C 25 5 25 35 50 35 C 75 35 75 5 50 5 Z" fill="%23333"/><path d="M50 25 C 40 25 40 35 50 35 C 60 35 60 25 50 25 Z" fill="white"/><ellipse cx="40" cy="30" rx="3" ry="5" fill="black"/><ellipse cx="60" cy="30" rx="3" ry="5" fill="black"/><path d="M50 45 C 40 55 40 65 50 65 C 60 65 60 55 50 45 Z" fill="white"/><path d="M20 55 L 30 45 L 10 35 Z" fill="%23333" transform="rotate(-20 20 45)"/><path d="M80 55 L 70 45 L 90 35 Z" fill="%23333" transform="rotate(20 80 45)"/><path d="M40 85 Q 50 90 60 85 L 55 90 L 45 90 Z" fill="orange"/><rect x="40" y="40" width="20" height="5" fill="red"/><polygon points="40,45 60,45 55,55 45,55" fill="red"/></g></svg>`
+            },
+            { // Stage 2
+                scoreThreshold: 1500,
+                platformWidth: 40,
+                gravity: 0.4,
+                bgColor: 'linear-gradient(to bottom, #000080, #87CEFA)',
+                penguinImage: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g><rect x="25" y="20" width="50" height="70" rx="25" fill="%23333"/><path d="M50 0 C 20 0 20 30 50 30 C 80 30 80 0 50 0 Z" fill="%23333"/><path d="M50 20 C 40 20 40 30 50 30 C 60 30 60 20 50 20 Z" fill="white"/><ellipse cx="40" cy="25" rx="3" ry="5" fill="black"/><ellipse cx="60" cy="25" rx="3" ry="5" fill="black"/><path d="M50 40 C 35 50 35 65 50 65 C 65 65 65 50 50 40 Z" fill="white"/><path d="M15 50 L 25 40 L 5 30 Z" fill="%23333" transform="rotate(-20 15 40)"/><path d="M85 50 L 75 40 L 95 30 Z" fill="%23333" transform="rotate(20 85 40)"/><path d="M40 85 Q 50 90 60 85 L 55 90 L 45 90 Z" fill="orange"/><rect x="35" y="0" width="30" height="15" fill="black"/><rect x="30" y="10" width="40" height="5" fill="black"/></g></svg>`
+            }
+        ];
+        this.stage = 0;
+
         this.shadowRoot.innerHTML = `
             <style>
                 :host {
@@ -10,25 +35,26 @@ class PenguinGame extends HTMLElement {
                     display: block;
                     width: 375px;
                     height: 667px;
-                    background-color: var(--bg-color, #87CEEB);
+                    background: var(--bg-color, linear-gradient(to bottom, #87CEEB, #FFFFFF));
                     overflow: hidden;
                     border: 2px solid #ccc;
                     border-radius: 10px;
                     box-shadow: 0 0 10px rgba(0,0,0,0.5);
+                    transition: background 1s;
                 }
                 .penguin {
                     position: absolute;
                     width: 40px;
                     height: 40px;
-                    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g><rect x="30" y="40" width="40" height="50" rx="20" fill="%23333"/><path d="M50 10 C 25 10 25 40 50 40 C 75 40 75 10 50 10 Z" fill="%23333"/><path d="M50 30 C 40 30 40 40 50 40 C 60 40 60 30 50 30 Z" fill="white"/><ellipse cx="40" cy="35" rx="3" ry="5" fill="black"/><ellipse cx="60" cy="35" rx="3" ry="5" fill="black"/><path d="M50 50 C 40 60 40 70 50 70 C 60 70 60 60 50 50 Z" fill="white"/><path d="M20 60 L 30 50 L 10 40 Z" fill="%23333" transform="rotate(-20 20 50)"/><path d="M80 60 L 70 50 L 90 40 Z" fill="%23333" transform="rotate(20 80 50)"/><path d="M40 90 Q 50 95 60 90 L 55 95 L 45 95 Z" fill="orange"/></g></svg>');
                     background-size: cover;
+                    transition: background-image 1s;
                 }
                 .platform {
                     position: absolute;
-                    width: 80px;
                     height: 20px;
                     background-color: var(--platform-color, #FFFFFF);
                     border-radius: 10px;
+                    transition: width 0.5s;
                 }
                 .score {
                     position: absolute;
@@ -60,7 +86,6 @@ class PenguinGame extends HTMLElement {
         this.penguinX = 167;
         this.penguinY = 50;
         this.penguinDY = 0;
-        this.gravity = 0.3;
         this.jumpForce = -10;
         
         this.keys = {};
@@ -81,14 +106,29 @@ class PenguinGame extends HTMLElement {
     }
 
     init() {
+        this.setStage(0);
         this.createPenguin();
         this.createInitialPlatforms();
         this.gameLoop();
     }
 
+    setStage(stageIndex) {
+        if (stageIndex >= this.stages.length) return;
+
+        this.stage = stageIndex;
+        const stageConfig = this.stages[this.stage];
+
+        this.gravity = stageConfig.gravity;
+        this.style.background = stageConfig.bgColor;
+        if (this.penguin) {
+            this.penguin.style.backgroundImage = `url("${stageConfig.penguinImage}")`;
+        }
+    }
+
     createPenguin() {
         this.penguin = document.createElement('div');
         this.penguin.classList.add('penguin');
+        this.penguin.style.backgroundImage = `url("${this.stages[this.stage].penguinImage}")`;
         this.shadowRoot.appendChild(this.penguin);
         this.updatePenguinPosition();
     }
@@ -99,20 +139,22 @@ class PenguinGame extends HTMLElement {
     }
 
     createInitialPlatforms() {
+        const stageConfig = this.stages[this.stage];
         // Start platform
-        this.createPlatform(150, 50);
+        this.createPlatform(150, 50, stageConfig.platformWidth);
 
         // Other initial platforms
         for (let i = 1; i < 10; i++) {
-            this.createPlatform(Math.random() * 295, 50 + i * 70);
+            this.createPlatform(Math.random() * (375 - stageConfig.platformWidth), 50 + i * 70, stageConfig.platformWidth);
         }
     }
 
-    createPlatform(x, y) {
+    createPlatform(x, y, width) {
         const platform = document.createElement('div');
         platform.classList.add('platform');
         platform.style.left = x + 'px';
         platform.style.bottom = y + 'px';
+        platform.style.width = width + 'px';
         this.shadowRoot.appendChild(platform);
         this.platforms.push(platform);
     }
@@ -182,7 +224,6 @@ class PenguinGame extends HTMLElement {
                 const pf = platform.getBoundingClientRect();
                 const hostRect = this.getBoundingClientRect();
                 
-                // Adjust bounding client rects to be relative to the game container
                 const p_left = p.left - hostRect.left;
                 const p_right = p.right - hostRect.left;
                 const p_top = p.top - hostRect.top;
@@ -210,6 +251,7 @@ class PenguinGame extends HTMLElement {
     }
 
     updatePlatforms() {
+        const stageConfig = this.stages[this.stage];
         if (this.penguinY > 200) {
             const deltaY = this.penguinY - 200;
             this.penguinY = 200;
@@ -222,7 +264,7 @@ class PenguinGame extends HTMLElement {
             this.platforms = this.platforms.filter(platform => {
                 if (parseFloat(platform.style.bottom) < -20) {
                     this.shadowRoot.removeChild(platform);
-                    this.createPlatform(Math.random() * 295, 650);
+                    this.createPlatform(Math.random() * (375 - stageConfig.platformWidth), 650, stageConfig.platformWidth);
                      this.score += 10;
                     return false;
                 }
@@ -233,6 +275,10 @@ class PenguinGame extends HTMLElement {
 
     updateScore() {
         this.scoreElement.textContent = `Score: ${this.score}`;
+        const nextStage = this.stage + 1;
+        if (nextStage < this.stages.length && this.score >= this.stages[nextStage].scoreThreshold) {
+            this.setStage(nextStage);
+        }
     }
 
     endGame() {
